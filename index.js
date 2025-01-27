@@ -3,6 +3,7 @@ const http = require("http");
 
 const PORT = process.env.PORT || 8080;
 
+//Create Socket.IO Server Instance
 const server = http.createServer();
 const io = new Server(server, {
   cors: {
@@ -11,16 +12,21 @@ const io = new Server(server, {
   },
 });
 
+//Storage for tasks
 let tasks = [];
 
+//When new client is connected
 io.on("connection", (socket) => {
+  //Send all tasks to new client
   socket.emit("init", tasks);
 
+  //When new task is added
   socket.on("addTask", (task) => {
     tasks.push(task);
     socket.broadcast.emit("addTask", task);
   });
 
+  //When task is updated
   socket.on("completeTask", ({ id, status }) => {
     tasks = tasks.map((task) =>
       task.id === id ? { ...task, completed: status } : task
@@ -28,6 +34,7 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("completeTask", { id, status });
   });
 
+  //When task is deleted
   socket.on("deleteTask", (id) => {
     tasks = tasks.filter((task) => task.id !== id);
     socket.broadcast.emit("deleteTask", id);
